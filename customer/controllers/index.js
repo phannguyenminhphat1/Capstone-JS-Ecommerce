@@ -5,6 +5,8 @@ function getEle(id) {
   return document.getElementById(id);
 }
 
+crt.cart = JSON.parse(localStorage.getItem("data")) || [];
+
 function getListProducts() {
   var promise = api.fetchData();
   promise
@@ -27,7 +29,7 @@ function renderUI(data) {
         <div class="product-f-image">
             <img src="./assets/img/${item.img}" alt="" />
             <div class="product-hover">
-                <a onclick="handleAddToCart(${item.id})" href="#" class="add-to-cart-link"><i class="fa fa-shopping-cart"></i> Add to cart</a>
+                <a onclick="handleAddToCart(${item.id})" class="add-to-cart-link"><i class="fa fa-shopping-cart"></i> Add to cart</a>
                 <a href="./views/single-product.html?id=${item.id}" class="view-details-link"><i class="fa fa-link"></i> See details</a>
             </div>
         </div>
@@ -40,6 +42,7 @@ function renderUI(data) {
     </div>
 
     `;
+    calcTotalBill(data);
   }
   document.querySelector("#product-carousel").innerHTML = content;
   $(".product-carousel").owlCarousel({
@@ -60,40 +63,6 @@ function renderUI(data) {
     },
   });
 }
-
-// function getInfoProduct(id) {
-//   var promise = api.getProductById(id);
-//   promise
-//     .then(function (result) {
-//       var id = result.data.id;
-//       var name = result.data.name;
-//       var price = result.data.price;
-//       var screen = result.data.screen;
-//       var backCamera = result.data.backCamera;
-//       var frontCamera = result.data.frontCamera;
-//       var img = result.data.img;
-//       var desc = result.data.desc;
-//       var type = result.data.type;
-//       var product = new Product(
-//         id,
-//         name,
-//         price,
-//         screen,
-//         backCamera,
-//         frontCamera,
-//         img,
-//         desc,
-//         type
-//       );
-//       handleAddToCart(product.id);
-//       console.log(crt.cart);
-//     })
-
-//     .catch(function (error) {
-//       console.log(error);
-//     });
-// }
-
 function handleAddToCart(id) {
   var search = crt.cart.find((item) => item.id === id);
   if (!search) {
@@ -101,18 +70,38 @@ function handleAddToCart(id) {
   } else {
     search.quantity += 1;
   }
-  updateProductQuantity(id);
-}
-
-function updateProductQuantity(id) {
-  var search = crt.cart.find((item) => item.id === id);
-  console.log(search);
+  localStorage.setItem("data", JSON.stringify(crt.cart));
   calcCartQuantity();
+  alert("Add To Cart Success");
 }
 
 function calcCartQuantity() {
-  (getEle("product-count").innerHTML = crt.cart
+  var domQtyCart = getEle("product-count");
+  var totalAmount = crt.cart
     .map((item) => item.quantity)
-    .reduce((x, y) => x + y)),
-    0;
+    .reduce((x, y) => x + y, 0);
+  domQtyCart.innerHTML = totalAmount;
 }
+function formatCurrency(n, currency) {
+  return (
+    currency +
+    n.toFixed(2).replace(/./g, function (c, i, a) {
+      return i > 0 && c !== "." && (a.length - i) % 3 === 0 ? "," + c : c;
+    })
+  );
+}
+function calcTotalBill(data) {
+  if (crt.cart.length == 0) {
+    return;
+  } else {
+    let total = crt.cart
+      .map((item) => {
+        let { id, quantity } = item;
+        let search = data.find((x) => parseInt(x.id) === id) || [];
+        return quantity * search.price;
+      })
+      .reduce((x, y) => x + y, 0);
+  }
+}
+
+calcCartQuantity();

@@ -1,7 +1,12 @@
 var api = new CallApi();
+var crt = new Cart();
 
 const urlParams = new URLSearchParams(window.location.search);
 const product = urlParams.get("id");
+
+function getEle(id) {
+  return document.getElementById(id);
+}
 
 function getSingleProduct(id) {
   var promise = api.getProductById(id);
@@ -16,19 +21,7 @@ function getSingleProduct(id) {
       console.error(error);
     });
 }
-// function getListProductRelated() {
-//   var promise = api.fetchData();
-//   promise
-//     .then(function (result) {
-//       var listRelated = result.data.filter((item) => {
-//         return console.log(item.type == "Samsung");
-//       });
-//       renderProductRelated(listRelated);
-//     })
-//     .catch(function (error) {
-//       console.error(error);
-//     });
-// }
+
 getSingleProduct(product);
 
 function renderSinglePageText(item) {
@@ -51,9 +44,10 @@ function renderSinglePageText(item) {
             name="quantity"
             min="1"
             step="1"
+            id="numberDisabled"
           />
         </div>
-        <button class="add_to_cart_button" onClick="console.log(${product})" type="button">
+        <button class="add_to_cart_button" onclick="handleAddToCart(${item.id})" type="button">
           Add to cart
         </button>
       </form>
@@ -84,21 +78,13 @@ function renderSinglePageText(item) {
             <p>
               ${item.desc}
             </p>
-
-            <p>
-              Mauris placerat vitae lorem gravida viverra. Mauris
-              in fringilla ex. Nulla facilisi. Etiam scelerisque
-              tincidunt quam facilisis lobortis. In malesuada
-              pulvinar neque a consectetur. Nunc aliquam gravida
-              purus, non malesuada sem accumsan in. Morbi vel
-              sodales libero.
-            </p>
           </div>
         </div>
       </div>
     </div>
     `;
   document.getElementById("product__text").innerHTML = content;
+  document.getElementById("numberDisabled").disabled = true;
 }
 
 function renderSinglePageImage(item) {
@@ -109,11 +95,6 @@ function renderSinglePageImage(item) {
         <img src="../assets/img/${item.img}" alt="" />
     </div>
 
-    <div class="product-gallery">
-        <img src="../assets/img/product-thumb-1.jpg" alt="" />
-        <img src="../assets/img/product-thumb-2.jpg" alt="" />
-        <img src="../assets/img/product-thumb-3.jpg" alt="" />
-    </div>
 </div>
   `;
   document.getElementById("product__image").innerHTML = content;
@@ -129,21 +110,23 @@ function renderHeaderMenu(item) {
   document.getElementById("product__menu").innerHTML = content;
 }
 
-function renderProductRelated(data) {
-  var content = "";
-  for (let i = 0; i < data.length; i++) {
-    var item = data[i];
-    content += `<div class="thubmnail-recent">
-    <img
-      src="../assets/img/${item.img}"
-      class="recent-thumb"
-      alt=""
-    />
-    <h2><a href="">${item.name}</a></h2>
-    <div class="product-sidebar-price">
-      <ins>$${item.price}</ins> <del>$100.00</del>
-    </div>
-  </div>`;
+function handleAddToCart(id) {
+  var search = crt.cart.find((item) => item.id === id);
+  if (!search) {
+    crt.addCart({ id, quantity: 1 });
+  } else {
+    search.quantity += 1;
   }
-  document.getElementById("single-sidebar").innerHTML = content;
+  localStorage.setItem("data", JSON.stringify(crt.cart));
+  calcCartQuantity();
+  alert("Add To Cart Success");
 }
+
+function calcCartQuantity() {
+  var domQtyCart = getEle("product-count");
+  var totalAmount = crt.cart
+    .map((item) => item.quantity)
+    .reduce((x, y) => x + y, 0);
+  domQtyCart.innerHTML = totalAmount;
+}
+calcCartQuantity();

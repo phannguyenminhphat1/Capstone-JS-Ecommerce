@@ -12,13 +12,5 @@ class CallApi {
         method: "GET",
       });
     };
-
-    this.addProduct = function (item) {
-      return axios({
-        url: "https://5eea040db13d0a00164e40c2.mockapi.io/api/Product",
-        method: "POST",
-        data: item,
-      });
-    };
   }
 }

@@ -1,8 +1,10 @@
 var api = new CallApi();
+var crt = new Cart();
 
 function getEle(id) {
   return document.getElementById(id);
 }
+crt.cart = JSON.parse(localStorage.getItem("data")) || [];
 
 function getListProducts() {
   var promise = api.fetchData();
@@ -38,7 +40,7 @@ function renderShopUI(data) {
                 data-product_sku=""
                 data-product_id="70"
                 rel="nofollow"
-                href="/canvas/shop/?add-to-cart=70"
+                onclick="handleAddToCart(${item.id})"
                 >Add to cart</a
                 >
             </div>
@@ -47,4 +49,59 @@ function renderShopUI(data) {
         `;
   }
   getEle("shopProduct__content").innerHTML = content;
+}
+
+function handleAddToCart(id) {
+  var search = crt.cart.find((item) => item.id === id);
+  if (!search) {
+    crt.addCart({ id, quantity: 1 });
+  } else {
+    search.quantity += 1;
+  }
+  localStorage.setItem("data", JSON.stringify(crt.cart));
+  calcCartQuantity();
+  alert("Add To Cart Success");
+}
+
+function calcCartQuantity() {
+  var domQtyCart = getEle("product-count");
+  var totalAmount = crt.cart
+    .map((item) => item.quantity)
+    .reduce((x, y) => x + y, 0);
+  domQtyCart.innerHTML = totalAmount;
+}
+calcCartQuantity();
+
+function search() {
+  var domSearch = getEle("type").selectedIndex;
+  if (domSearch === 0) {
+    var promise = api.fetchData();
+    promise
+      .then(function (result) {
+        renderShopUI(result.data);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  } else if (domSearch === 1) {
+    var promise = api.fetchData();
+    promise
+      .then(function (result) {
+        var search = result.data.filter((item) => item.type == "Samsung");
+        renderShopUI(search);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  } else if (domSearch === 2) {
+    var promise = api.fetchData();
+    promise
+      .then(function (result) {
+        var search = result.data.filter((item) => item.type == "Iphone");
+        renderShopUI(search);
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  }
 }
